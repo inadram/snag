@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Render the survey, and refuse to render a partial one.
+
+The point of this script is the refusal. An audit tool stops being trusted the
+moment a practice can fall off the bottom of a report without anyone noticing,
+so the row count is compared against the rulepack and a mismatch is a non-zero
+exit rather than a shorter table. When the catalogue reaches 104 this fails
+loudly instead of quietly surveying 103 of them.
+
+Two states carry an obligation. An `n/a` row must quote the predicate that ran,
+because "clear" without its predicate is indistinguishable from "forgotten".
+And a rule that could not be evaluated — no browser, no gesture, no compiled
+detector, nothing mounted — is `unsure`, never `n/a`.
+
+Reads findings as JSON: [{"slug","state","note","blockedBy","where"}], either as
+the first argument, as a file named by the first argument, or on stdin.
+
+The argument form exists because of a sandbox rule. A heredoc carrying JSON is
+refused before permissions are even consulted — "Contains brace with quote
+character (expansion obfuscation)" — and a heredoc is exactly what a model
+reaches for when it has seventeen rows of JSON to pass. Measured: a run spent
+five attempts on heredoc variants, gave up, and produced no survey at all. The
+first word of the command has to be this script for the permission grant to
+match it, so taking the findings as argv removes both problems at once.
+
+Set SNAG_RECORD to a path and the accepted findings are also written there as
+JSON. Nothing else changes: the same rows are validated and the same table is
+printed. It exists because grading a survey by reading its prose is guesswork,
+and the end-to-end suite needs the states and locations exactly as the ledger
+accepted them. Unset, which is every ordinary run, nothing is written.
+"""
+import json
+import os
+import pathlib
+import sys
+
+PACK = pathlib.Path(__file__).resolve().parent.parent / "rules.json"
+STATES = ("held", "missing", "unsure", "n/a", "scoped-out")
+BLOCKED = ("needs-runtime", "needs-gesture", "needs-intent", "needs-detector")
+
+pack = json.loads(PACK.read_text())
+rules = {r["slug"]: r for r in pack["rules"]}
+
+# A JSON argument is distinguished from a path by its first character rather
+# than by asking the filesystem: Path.is_file() on seventeen rows of JSON
+# raises "File name too long" before it can answer.
+arg = sys.argv[1] if len(sys.argv) > 1 else None
+if arg and not arg.lstrip().startswith(("[", "{")):
+    if not pathlib.Path(arg).is_file():
+        sys.exit(f"no such findings file: {arg}\n"
+                 f"pass the JSON itself as the argument, or a path to a file holding it")
+    arg = pathlib.Path(arg).read_text()
+try:
+    found = json.loads(arg) if arg else json.load(sys.stdin)
+except json.JSONDecodeError as e:
+    sys.exit(f"findings must be JSON, as the first argument or on stdin: {e}")
+by = {f["slug"]: f for f in found}
+
+problems = []
+for slug in by:
+    if slug not in rules:
+        problems.append(f"finding for {slug!r}, which is not a practice")
+for slug, r in rules.items():
+    f = by.get(slug)
+    if f is None:
+        problems.append(f"{slug}: no row. Every practice is surveyed or the survey is not one.")
+        continue
+    if f.get("state") not in STATES:
+        problems.append(f"{slug}: state {f.get('state')!r} is not one of {STATES}")
+    if f.get("state") == "n/a" and not f.get("note"):
+        problems.append(f"{slug}: an n/a row must quote the predicate that ran")
+    if f.get("state") == "unsure" and f.get("blockedBy") not in BLOCKED:
+        problems.append(f"{slug}: an unsure row must say what blocked it, one of {BLOCKED}")
+    if f.get("state") in ("held", "missing") and not f.get("where"):
+        problems.append(f"{slug}: a {f['state']} row must point at a location")
+    if not r["ruled"]:
+        problems.append(f"{slug}: the rulepack carries this practice with no rule, which "
+                        f"ci/check-snag.py should have refused. Rebuild the rulepack.")
+
+if problems:
+    print("the survey is incomplete:", file=sys.stderr)
+    for p in problems[:20]:
+        print("  " + p, file=sys.stderr)
+    if len(problems) > 20:
+        print(f"  ... and {len(problems) - 20} more", file=sys.stderr)
+    sys.exit(1)
+
+tally = {s: 0 for s in STATES}
+for f in by.values():
+    tally[f["state"]] += 1
+
+record = os.environ.get("SNAG_RECORD")
+if record:
+    pathlib.Path(record).write_text(json.dumps(
+        {"rules": len(rules), "tally": tally, "findings": [by[r["slug"]] for r in pack["rules"]]},
+        indent=1))
+
+order = {s: i for i, s in enumerate(STATES)}
+# Within a state, keep the shelf's own sequence. It is hand-ordered, the review
+# skill promises the survey reports in it, and re-sorting by slug would throw
+# away the one thing a returning reader has.
+seq = {r["slug"]: i for i, r in enumerate(pack["rules"])}
+rows = sorted(rules.values(), key=lambda r: (order[by[r["slug"]]["state"]], seq[r["slug"]]))
+print(f"Finish work survey — {len(rules)} practices\n")
+last = None
+for r in rows:
+    f = by[r["slug"]]
+    if f["state"] != last:
+        last = f["state"]
+        print(f"\n  {last.upper()}  ({tally[last]})  {pack['states'][last]}")
+    tail = f.get("where") or f.get("blockedBy") or f.get("note") or ""
+    print(f"     {r['slug']:<32} {tail[:74]}")
+print("\n" + "  ".join(f"{s} {tally[s]}" for s in STATES))
+print(f"\n  Broken/fixed demos: {pack['base']}demo.html?pattern=<slug>[&off=1]")

@@ -1,0 +1,79 @@
+#!/usr/bin/env python3
+"""The only thing in the plugin that writes, and the gates are here rather than
+in prose because a gate described in a skill file is a suggestion.
+
+Nothing in the catalogue is in the `write` tier today. Everything applicable is
+`propose`, which means this emits the edit and stops — the diff is the product.
+--commit is refused unless the tier actually permits it, so widening the tier is
+a deliberate act in ci/snag-deltas.json and not an argument here.
+"""
+import argparse
+import json
+import pathlib
+import subprocess
+import sys
+
+PACK = pathlib.Path(__file__).resolve().parent.parent / "rules.json"
+
+a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+a.add_argument("slug")
+a.add_argument("file", help="the file the edit lands in")
+a.add_argument("--commit", action="store_true", help="write it, rather than print it")
+a.add_argument("--yes", action="store_true", help="skip the clean-tree requirement (not advised)")
+args = a.parse_args()
+
+pack = json.loads(PACK.read_text())
+rule = next((r for r in pack["rules"] if r["slug"] == args.slug), None)
+target = pathlib.Path(args.file)
+
+def refuse(why, *, then=None):
+    print(f"refused: {why}", file=sys.stderr)
+    if then:
+        print(then, file=sys.stderr)
+    sys.exit(1)
+
+# 1. the practice exists
+if rule is None:
+    refuse(f"no practice {args.slug!r}")
+# 2. it has an authored rule at all
+if not rule["ruled"]:
+    refuse(f"{args.slug} has no authored rule yet",
+           then="It reports as unsure/needs-rule in a survey. Use snag teach instead.")
+# 3. the tier permits an edit
+if rule["tier"] not in ("write", "propose"):
+    refuse(f"{args.slug} is tier {rule['tier']} — {pack['tiers'][rule['tier']]}",
+           then=f"There is no correct patch to emit for this practice. See it running:\n"
+                f"  {pack['base']}{rule['defect']}")
+# 4. handsOff is absolute
+if rule["handsOff"]:
+    refuse(f"{args.slug} is marked handsOff; no edit is permitted at any scope")
+# 5. the target exists
+if not target.exists():
+    refuse(f"{target} does not exist")
+# 6. unattended writing needs the write tier, which nothing has
+if args.commit and rule["tier"] != "write":
+    refuse(f"{args.slug} is tier propose, so the edit is proposed and not written",
+           then="Read the diff and apply it yourself, or widen the tier in ci/snag-deltas.json\n"
+                "and re-run the guard — which will then demand a verify clause.")
+# 7. a dirty tree makes the edit unreviewable
+if args.commit and not args.yes:
+    try:
+        dirty = subprocess.run(["git", "status", "--porcelain", str(target)],
+                               capture_output=True, text=True, cwd=target.parent).stdout.strip()
+        if dirty:
+            refuse(f"{target} has uncommitted changes",
+                   then="Commit or stash first, so the edit is legible on its own.")
+    except FileNotFoundError:
+        pass
+
+print(f"{rule['name']}  [{rule['slug']}]  tier {rule['tier']}")
+print(f"\n  the edit\n    {rule['apply']}")
+if rule["verify"]:
+    print(f"\n  prove it moved something\n    {rule['verify']}")
+print(f"\n  before you apply it, rule out:")
+for c in rule["confusables"]:
+    print(f"    - {c}")
+print(f"\n  target  {target}")
+print(f"  broken  {pack['base']}{rule['defect']}")
+print(f"  fixed   {pack['base']}{rule['demo']}")
+print("\nProposed only. Nothing was written.")

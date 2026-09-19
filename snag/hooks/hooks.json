@@ -1,0 +1,13 @@
+{
+  "description": "Keeps the read-only snag skills read-only at execution time, not just in their description.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          { "type": "command", "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/read-only-skills.py\"", "timeout": 5 }
+        ]
+      }
+    ]
+  }
+}

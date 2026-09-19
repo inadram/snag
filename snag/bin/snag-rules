@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+"""Slice the rulepack, so a skill reads one rule instead of loading all seventeen.
+
+This exists instead of a generated markdown file per practice. Progressive disclosure then
+costs one command rather than a directory listing, and editing a rule is a
+one-line diff in ci/snag-deltas.json rather than a regenerated file nobody reads.
+"""
+import argparse
+import json
+import pathlib
+import sys
+
+PACK = pathlib.Path(__file__).resolve().parent.parent / "rules.json"
+
+a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+a.add_argument("slug", nargs="?", help="one practice; omit to list")
+a.add_argument("--tier", help="only this tier")
+a.add_argument("--shelf", action="store_true", help="the Finish work seventeen — the whole rulepack")
+a.add_argument("--ruled", action="store_true", help="kept for scripts; every rule is ruled now")
+a.add_argument("--json", action="store_true", help="machine-readable")
+args = a.parse_args()
+
+if not PACK.exists():
+    sys.exit(f"rulepack missing at {PACK}; the plugin is not installed correctly")
+pack = json.loads(PACK.read_text())
+rules = pack["rules"]
+
+if args.slug:
+    hit = next((r for r in rules if r["slug"] == args.slug), None)
+    if not hit:
+        near = [r["slug"] for r in rules if args.slug in r["slug"] or args.slug in r["name"].lower()]
+        sys.exit(f"no practice {args.slug!r}" + (f"; did you mean {', '.join(near[:4])}?" if near else ""))
+    if args.json:
+        print(json.dumps(hit, indent=1)); sys.exit(0)
+    base = pack["base"]
+    print(f"{hit['name']}  [{hit['slug']}]")
+    print(f"  category    {hit['category']}")
+    print(f"  tier        {hit['tier']} — {pack['tiers'][hit['tier']]}")
+    print(f"  decide from {hit['decide']}")
+    print(f"  technique   {hit['technique']}")
+    print(f"  benefit     {hit['benefit']}")
+    print(f"  off / on    {hit['offLabel']}  /  {hit['onLabel']}")
+    print(f"\n  see it broken  {base}{hit['defect']}")
+    print(f"  see it fixed   {base}{hit['demo']}")
+    if hit["ruled"]:
+        print(f"\n  precondition  {hit['precondition']}")
+        print(f"  evidence      {hit['evidence']}")
+        print(f"  absence       {hit['absence']}")
+        if hit["apply"]:
+            print(f"  apply         {hit['apply']}")
+        if hit["verify"]:
+            print(f"  verify        {hit['verify']}")
+        print("  fires wrongly when:")
+        for c in hit["confusables"]:
+            print(f"    - {c}")
+    print(f"\n  prompt\n    {hit['prompt']}")
+    sys.exit(0)
+
+sel = rules
+if args.tier: sel = [r for r in sel if r["tier"] == args.tier]
+if args.ruled: sel = [r for r in sel if r["ruled"]]
+if args.json:
+    print(json.dumps(sel, indent=1)); sys.exit(0)
+for r in sel:
+    print("%-32s %-8s %s" % (r["slug"], r["tier"], r["decide"]))
+print(f"\n{len(sel)} of {len(rules)} — the Finish work shelf")

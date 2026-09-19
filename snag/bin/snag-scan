@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""One traversal of a source tree, every compiled source predicate, one line each.
+
+The output is deliberately noisy in one direction: it prints a CLEAR line for
+every predicate that ran and did not match, not only the HITs. A report that
+lists only what it found is indistinguishable from a report that forgot to look,
+and bin/snag-ledger will refuse to mark a practice n/a without the predicate
+quoted — this is where that quote comes from.
+
+Source predicates are cheap and shallow by design. They find candidates; they do
+not decide. Every hit is a location for a human or an agent to judge against the
+rule's confusables, which is why nothing here writes.
+"""
+import argparse
+import json
+import pathlib
+import re
+import sys
+
+PACK = pathlib.Path(__file__).resolve().parent.parent / "rules.json"
+SKIP = {".git", "node_modules", "dist", "build", ".next", "out", "vendor",
+        "__pycache__", ".venv", "coverage", ".cache"}
+EXT = {".css", ".scss", ".html", ".jsx", ".tsx", ".js", ".ts", ".vue", ".svelte", ".astro"}
+
+# slug -> (needle, what a hit means). Kept literal and few: a predicate that
+# guesses is worse than one that abstains, because an abstention is visible in
+# the ledger and a wrong hit is not.
+HIT = {
+    "tabular-numbers": (
+        re.compile(r"(?:textContent|innerText|innerHTML)\s*=|\.toFixed\(|toLocaleString\(|Intl\.NumberFormat"),
+        "a number written into the DOM at runtime"),
+    "color-scheme": (
+        re.compile(r"prefers-color-scheme|background(?:-color)?\s*:\s*#(?:0|1|2)[0-9a-f]{5}\b"),
+        "the page paints its own dark surface"),
+    "concentric-corner-radii": (
+        re.compile(r"border-radius"), "a rounded box"),
+    "decelerate-in-accelerate-out": (
+        re.compile(r"transition(?:-timing-function)?\s*:[^;]*\b(?:ease-in-out|ease)\b|cubic-bezier"),
+        "a timing function that may serve both directions"),
+    "optical-alignment": (
+        re.compile(r"hanging-punctuation|[\"'“‘]\s*\{|&ldquo;"), "type that may open on a mark"),
+    "interruptible-animation": (
+        re.compile(r"\.animate\(|requestAnimationFrame|new Animation\("), "a hand-driven animation"),
+    "damped-motion": (
+        re.compile(r"\bdamping\b|\bstiffness\b|\bspring\b", re.I), "a spring"),
+    "shared-layout-indicator": (
+        re.compile(r"aria-selected|role=[\"']tab[\"']|\.active\b"), "a single-select group"),
+    "shared-element-morph": (
+        re.compile(r"view-transition-name|startViewTransition|getBoundingClientRect"),
+        "a transition that could carry an element across"),
+    "grab-point-preservation": (
+        re.compile(r"pointerdown|mousedown|dragstart"), "a pointer-initiated drag"),
+    "semantic-zoom": (
+        re.compile(r"\bzoom\b|\bscale\s*[<>]=?|scale\s*\)"), "a scale threshold"),
+    "hit-slop": (re.compile(r"<button|role=[\"']button[\"']|<a\s"), "interactive targets"),
+}
+
+a = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+a.add_argument("target", help="file or directory")
+a.add_argument("--json", action="store_true")
+args = a.parse_args()
+
+pack = json.loads(PACK.read_text())
+rules = {r["slug"]: r for r in pack["rules"]}
+root = pathlib.Path(args.target).resolve()
+if not root.exists():
+    sys.exit(f"no such path: {args.target}")
+
+files = [root] if root.is_file() else [
+    p for p in root.rglob("*")
+    if p.is_file() and p.suffix in EXT
+    and not (SKIP & set(p.relative_to(root).parts))]
+
+found = {}
+for p in files:
+    try:
+        text = p.read_text(errors="replace")
+    except OSError:
+        continue
+    for slug, (needle, meaning) in HIT.items():
+        m = needle.search(text)
+        if m:
+            line = text[:m.start()].count("\n") + 1
+            found.setdefault(slug, []).append(f"{p.relative_to(root.parent)}:{line}")
+
+if not files:
+    print(f"no scannable files under {root} — nothing was read, so nothing is clear.\n"
+          f"Every practice is unsure/needs-runtime until a real source tree is scanned.\n"
+          f"Looked for: {', '.join(sorted(EXT))}", file=sys.stderr)
+    if args.json:
+        print(json.dumps({"files": 0, "root": str(root), "results": [
+            {"slug": s, "signal": "UNREAD",
+             "note": "no source files were read; this is not a clear"} for s in sorted(rules)]}, indent=1))
+    sys.exit(2)
+
+out = []
+for slug, r in sorted(rules.items()):
+    if slug not in HIT:
+        out.append({"slug": slug, "signal": "NOSIG",
+                    "note": "no source predicate compiled; unsure/needs-detector, never clear"})
+    elif slug in found:
+        out.append({"slug": slug, "signal": "HIT", "meaning": HIT[slug][1],
+                    "where": found[slug][:8], "count": len(found[slug])})
+    else:
+        out.append({"slug": slug, "signal": "CLEAR",
+                    "note": f"searched {len(files)} files for {HIT[slug][1]}; no match"})
+
+if args.json:
+    print(json.dumps({"files": len(files), "root": str(root), "results": out}, indent=1))
+    sys.exit(0)
+
+for o in out:
+    if o["signal"] == "HIT":
+        print(f"HIT   {o['slug']:<32} {o['count']:>3}x  {', '.join(o['where'][:3])}")
+for o in out:
+    if o["signal"] == "CLEAR":
+        print(f"CLEAR {o['slug']:<32} {o['note']}")
+n = sum(1 for o in out if o["signal"] == "NOSIG")
+print(f"\n{len(files)} files. "
+      f"{sum(1 for o in out if o['signal']=='HIT')} hit, "
+      f"{sum(1 for o in out if o['signal']=='CLEAR')} clear, "
+      f"{n} with no source predicate — those are unsure/needs-detector, not clear.")

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "inadram",
+  "description": "Tools from inadram studio for frontend interaction craft.",
+  "owner": {
+    "name": "inadram studio",
+    "url": "https://design.inadram.studio"
+  },
+  "plugins": [
+    {
+      "name": "snag",
+      "description": "A snagging survey for the Finish work shelf: seventeen hand-picked frontend finish practices from the House standard. Reviews a page, a section or one element and returns what is held, missing, unsure and not applicable, with located evidence for every row. Read-only by default; fixes one named finding at a time.",
+      "author": {
+        "name": "inadram studio",
+        "url": "https://design.inadram.studio/house-standard"
+      },
+      "category": "development",
+      "homepage": "https://design.inadram.studio/house-standard",
+      "source": "./snag"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "name": "snag",
+  "version": "2.1.0",
+  "description": "A snagging survey for the Finish work shelf: seventeen hand-picked frontend finish practices from the House standard. Reviews a page, a section or one element and returns what is held, missing, unsure and not applicable, with located evidence for every row. Read-only by default; fixes one named finding at a time.",
+  "author": {
+    "name": "inadram studio",
+    "url": "https://design.inadram.studio/house-standard"
+  },
+  "homepage": "https://design.inadram.studio/house-standard",
+  "license": "MIT",
+  "keywords": [
+    "design",
+    "frontend",
+    "interaction",
+    "motion",
+    "accessibility",
+    "code-review",
+    "css",
+    "focus"
+  ],
+  "skills": [
+    "./skills/"
+  ]
+}
