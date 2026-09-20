@@ -7,15 +7,54 @@ Its scope is the **Finish work shelf**: seventeen practices picked by hand from
 the 103 in the [House standard](https://design.inadram.studio/house-standard),
 published at
 [finish-work.html](https://design.inadram.studio/house-standard/finish-work.html).
-Concentric and per-axis corner radii, optical glyph centring, optical alignment,
-tabular figures, declared colour scheme, hit slop, damped springs, asymmetric
-easing, interruptible animation, shared element morph, shared layout indicator,
-grab-point preservation, momentum, rubber-band overscroll, latched semantic zoom,
-thumb-clipped label inversion.
+Every one of them has an authored rule, so there is no row the tool cannot speak
+to. The page is the source of truth: add an eighteenth entry there and CI demands
+a rule for it — and demands this table too, which is generated from the rulepack
+rather than typed.
 
-Every one of the seventeen has an authored rule, so there is no row the tool
-cannot speak to. The page is the source of truth: add an eighteenth entry there
-and CI demands a rule for it.
+Each name opens that practice's demo with the practice **switched off**, because
+these are invisible when present and obvious when absent. Drop `&off=1` from the
+URL to watch the same demo with it held.
+
+<!-- practices:start -->
+| practice | what its absence looks like | tier |
+|---|---|---|
+| [Concentric corner radii][concentric-corner-radii] | Corner gap widens at diagonals | `propose` |
+| [Per-axis radius correction][per-axis-radius-correction] | Corners stretch into ellipses | `teach` |
+| [Optical glyph centring][optical-glyph-centring] | Play mass sits left of axis | `teach` |
+| [Thumb-clipped label inversion][thumb-clipped-label-inversion] | Label turns white before thumb | `teach` |
+| [Rubber-band overscroll][rubber-band-overscroll] | List stops dead at edge | `teach` |
+| [Grab-point preservation][grab-point-preservation] | Card jumps sideways on grab | `brief` |
+| [Shared element morph][shared-element-morph] | Tile vanishes, panel fades in | `brief` |
+| [Shared layout indicator][shared-layout-indicator] | Pill teleports between tabs | `brief` |
+| [Damped spring settling][damped-motion] | Sheet rings through its rest line | `brief` |
+| [Decelerate in, accelerate out][decelerate-in-accelerate-out] | Menu creeps, then rushes in | `propose` |
+| [Interruptible animation][interruptible-animation] | Drawer keeps opening after cancel | `brief` |
+| [Tabular numbers][tabular-numbers] | Numbers wobble on every tick | `propose` |
+| [Optical alignment][optical-alignment] | First line sits in from the rest | `brief` |
+| [Declared colour scheme][color-scheme] | Native controls come up white | `propose` |
+| [Hit slop][hit-slop] | Presses near glyph fall through | `brief` |
+| [Latched semantic zoom][semantic-zoom] | Labels strobe at the threshold | `brief` |
+| [Momentum][momentum] | Rail halts where the finger left | `teach` |
+
+[concentric-corner-radii]: https://design.inadram.studio/house-standard/demo.html?pattern=concentric-corner-radii&off=1
+[per-axis-radius-correction]: https://design.inadram.studio/house-standard/demo.html?pattern=per-axis-radius-correction&off=1
+[optical-glyph-centring]: https://design.inadram.studio/house-standard/demo.html?pattern=optical-glyph-centring&off=1
+[thumb-clipped-label-inversion]: https://design.inadram.studio/house-standard/demo.html?pattern=thumb-clipped-label-inversion&off=1
+[rubber-band-overscroll]: https://design.inadram.studio/house-standard/demo.html?pattern=rubber-band-overscroll&off=1
+[grab-point-preservation]: https://design.inadram.studio/house-standard/demo.html?pattern=grab-point-preservation&off=1
+[shared-element-morph]: https://design.inadram.studio/house-standard/demo.html?pattern=shared-element-morph&off=1
+[shared-layout-indicator]: https://design.inadram.studio/house-standard/demo.html?pattern=shared-layout-indicator&off=1
+[damped-motion]: https://design.inadram.studio/house-standard/demo.html?pattern=damped-motion&off=1
+[decelerate-in-accelerate-out]: https://design.inadram.studio/house-standard/demo.html?pattern=decelerate-in-accelerate-out&off=1
+[interruptible-animation]: https://design.inadram.studio/house-standard/demo.html?pattern=interruptible-animation&off=1
+[tabular-numbers]: https://design.inadram.studio/house-standard/demo.html?pattern=tabular-numbers&off=1
+[optical-alignment]: https://design.inadram.studio/house-standard/demo.html?pattern=optical-alignment&off=1
+[color-scheme]: https://design.inadram.studio/house-standard/demo.html?pattern=color-scheme&off=1
+[hit-slop]: https://design.inadram.studio/house-standard/demo.html?pattern=hit-slop&off=1
+[semantic-zoom]: https://design.inadram.studio/house-standard/demo.html?pattern=semantic-zoom&off=1
+[momentum]: https://design.inadram.studio/house-standard/demo.html?pattern=momentum&off=1
+<!-- practices:end -->
 
 ## Install
 

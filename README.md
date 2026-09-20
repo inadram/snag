@@ -33,7 +33,10 @@ snag/                             the plugin itself
 
 `snag/README.md` is the full documentation: what each of the four skills does,
 the permission the first run asks for and why the obvious way to grant it does
-not work, and what the predicates scored when they were measured.
+not work, what the predicates scored when they were measured, and a table of the
+seventeen practices where every name opens that practice's demo running live in
+the browser with the practice switched off. That table is generated from the
+rulepack, so it cannot drift away from what the tool actually checks.
 
 The plugin is generated from the catalogue — `snag/rules.json` is built from
 the shelf page and should never be edited by hand. This repository is the
