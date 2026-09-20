@@ -39,8 +39,16 @@ the browser with the practice switched off. That table is generated from the
 rulepack, so it cannot drift away from what the tool actually checks.
 
 The plugin is generated from the catalogue — `snag/rules.json` is built from
-the shelf page and should never be edited by hand. This repository is the
+the shelf page and should never be edited by hand. This repository is a
 published copy; the catalogue it comes from is private.
+
+There are two published copies, and they are kept byte-identical:
+[gitlab.com/inadram/snag](https://gitlab.com/inadram/snag), which the install
+command on the site points at, and
+[github.com/inadram/snag](https://github.com/inadram/snag), which exists because
+the Anthropic plugin directory pins to a GitHub commit. The catalogue's build
+clones both on every commit and fails if either has fallen behind `plugin/snag`,
+because a stale mirror serves an old plugin without saying so.
 
 ## Where the practices live
 
