@@ -1,5 +1,5 @@
 {
- "version": "2.1.1",
+ "version": "2.1.2",
  "scope": "The Finish work shelf: seventeen practices chosen by hand. https://design.inadram.studio/house-standard/finish-work.html",
  "base": "https://design.inadram.studio/house-standard/",
  "tiers": {
@@ -360,16 +360,18 @@
    "defect": "demo.html?pattern=color-scheme&off=1",
    "ruled": true,
    "tier": "propose",
-   "decide": "source",
-   "precondition": "A document that paints its own dark surface — a stylesheet setting a dark background on html or body, or a prefers-color-scheme block — and no color-scheme declaration on :root.",
-   "evidence": "color-scheme on :root naming every scheme the page actually supports.",
-   "absence": "No color-scheme anywhere, while the page renders a dark surface. UA-painted widgets then resolve light against it.",
-   "apply": "Add color-scheme to :root listing only the schemes the page really supports.",
-   "verify": "Read the computed color-scheme on the root and check a native control's painted background follows it.",
+   "decide": "both",
+   "precondition": "A document that paints its own dark surface — a stylesheet setting a dark background on html or body, or a prefers-color-scheme block — and no color-scheme declaration on :root. Or, on a light page, a dark surface that holds native controls whose computed color-scheme has no dark, so they paint light against it.",
+   "evidence": "color-scheme on :root naming every scheme the page actually supports, and color-scheme: dark on any dark surface inside a light page, so the controls on it resolve dark.",
+   "absence": "No color-scheme reaches the dark surface. UA-painted widgets then resolve light against it: a white field and a light arrow on a dark panel.",
+   "apply": "Add color-scheme to :root listing only the schemes the page really supports. For a dark surface inside a light page, declare color-scheme: dark on that surface rather than light dark on :root.",
+   "verify": "Read the computed color-scheme on the root, or on the surface, and check a native control on it paints its background from that scheme.",
    "handsOff": false,
    "confusables": [
     "A light-only site. Declaring light dark there is a lie that makes the browser paint a dark scrollbar over a light page.",
-    "An embedded frame that inherits its host's scheme, where declaring one overrides the host deliberately."
+    "An embedded frame that inherits its host's scheme, where declaring one overrides the host deliberately.",
+    "A light card inside a dark page. The surface a field is painted against is the nearest one behind it, not the page, and declaring dark on the card turns its fields dark on a light card.",
+    "A field the author fills light on purpose, like a white search box on a dark hero, with no text colour of its own. Declaring dark on the surface swaps the UA text colour to light on the white fill."
    ]
   },
   {

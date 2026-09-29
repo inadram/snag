@@ -32,14 +32,17 @@ One measured caveat, recorded in `ci/fixtures/calibration.md`: the demos are
 325px stylised illustrations, not realistic markup. `hit-slop`'s demo has zero
 interactive elements in either state, so it cannot calibrate a DOM-shaped
 predicate at all. `concentric-corner-radii`'s is a genuine labelled pair —
-outer 48, padding 30, inner 48 in the defect and exactly 18 when held — and the
-predicate separates it. Check which you have before trusting a score.
+outer 18, padding 14, inner 16 in the defect and exactly 4 when held, on a 44px
+inner box — and the predicate separates it. `color-scheme`'s differs only on its
+dark panel, so it separates on the surface check and never on `:root`, which the
+demo shell declares light in both states. Check which you have before trusting a
+score.
 
 **Corpus B — `ci/fixtures/` in the catalogue repository.** Small hand-written
 pages where a naive predicate fires and the fix would be wrong: tabular figures
 proposed on body prose, hit-slop proposed on a target already inside a 44px
-parent, concentric radii proposed on a pill inside a card. These are the
-confusables made runnable.
+parent, concentric radii proposed on a pill inside a card, dark proposed for a
+light card inside a dark page. These are the confusables made runnable.
 
 `ci/fixtures/broken/` runs the other way, for the source predicates, which
 corpus A never loads. Each page carries a defect and names the practice in its

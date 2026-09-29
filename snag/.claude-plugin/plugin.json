@@ -1,6 +1,6 @@
 {
   "name": "snag",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "A snagging survey for the Finish work shelf: seventeen hand-picked frontend finish practices from the House standard. Reviews a page, a section or one element and returns what is held, missing, unsure and not applicable, with located evidence for every row. Read-only by default; fixes one named finding at a time.",
   "author": {
     "name": "inadram studio",

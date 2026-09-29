@@ -45,11 +45,38 @@ function snagInspect(target) {
        .map(e => ({ at: at(e), text: (e.textContent || '').trim().slice(0, 24) })).slice(0, 40),
     'short non-prose leaf text containing a digit, with no tabular-nums');
 
+  // Relative luminance, null for a mostly transparent colour, undefined for one
+  // that is not rgb() and so cannot be read without guessing.
+  const lum = c => {
+    const m = /^rgba?\(([^)]+)\)$/.exec(c);
+    if (!m) return undefined;
+    const v = m[1].split(/[\s,/]+/).map(Number);
+    if (v.length > 3 && v[3] < 0.5) return null;
+    const [R, G, B] = v.slice(0, 3).map(x => x / 255)
+      .map(x => x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+  };
+  // A field is painted against the nearest opaque background behind it, not
+  // the page: a light card inside a dark page is a light surface.
+  const surface = e => {
+    for (let n = e.parentElement; n; n = n.parentElement) {
+      const l = lum(cs(n).backgroundColor);
+      if (l === undefined) return null;
+      if (l !== null) return { n, l };
+    }
+    return null;
+  };
   const r = cs(document.documentElement).colorScheme;
   record('color-scheme',
-    (r && r !== 'normal') ? [] : [{ at: ':root', colorScheme: r,
-      bodyBackground: cs(document.body).backgroundColor }],
-    'computed color-scheme on the document element');
+    [...((r && r !== 'normal') ? [] : [{ at: ':root', colorScheme: r,
+      bodyBackground: cs(document.body).backgroundColor }]),
+     ...all.filter(e => e.matches('select,textarea,input:not([type="hidden"])') && e.getClientRects().length &&
+                        !cs(e).colorScheme.includes('dark') && lum(cs(e).backgroundColor) > 0.5)
+       .flatMap(e => { const s = surface(e);
+         return s && s.l < 0.18 ? [{ at: at(e), surface: at(s.n), colorScheme: cs(e).colorScheme,
+           surfaceBackground: cs(s.n).backgroundColor, fieldBackground: cs(e).backgroundColor }] : []; })
+       .slice(0, 20)],
+    'computed color-scheme on the document element, and native fields painted light on a dark surface whose scheme has no dark');
 
   record('hit-slop',
     all.filter(e => e.matches('a[href],button,input,select,[role="button"],[tabindex]:not([tabindex="-1"])'))
