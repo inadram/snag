@@ -37,14 +37,18 @@ HIT = {
     "decelerate-in-accelerate-out": (
         re.compile(r"transition(?:-timing-function)?\s*:[^;]*\b(?:ease-in-out|ease)\b|cubic-bezier"),
         "a timing function that may serve both directions"),
+    # `"${` after `=` is an attribute in a template literal, not text, and
+    # without the lookbehind it is the first match in nearly every such file.
     "optical-alignment": (
-        re.compile(r"hanging-punctuation|[\"'“‘]\s*\{|&ldquo;"), "type that may open on a mark"),
+        re.compile(r"hanging-punctuation|[\"'“‘]\s*\{|(?<!=)[\"'“‘]\s*\$\{|&ldquo;"),
+        "type that may open on a mark"),
     "interruptible-animation": (
         re.compile(r"\.animate\(|requestAnimationFrame|new Animation\("), "a hand-driven animation"),
     "damped-motion": (
         re.compile(r"\bdamping\b|\bstiffness\b|\bspring\b", re.I), "a spring"),
     "shared-layout-indicator": (
-        re.compile(r"aria-selected|role=[\"']tab[\"']|\.active\b"), "a single-select group"),
+        re.compile(r"aria-selected|role=[\"'](?:tab|radio|radiogroup)[\"']|type=[\"']radio[\"']|\.active\b"),
+        "a single-select group"),
     "shared-element-morph": (
         re.compile(r"view-transition-name|startViewTransition|getBoundingClientRect"),
         "a transition that could carry an element across"),

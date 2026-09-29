@@ -41,6 +41,13 @@ proposed on body prose, hit-slop proposed on a target already inside a 44px
 parent, concentric radii proposed on a pill inside a card. These are the
 confusables made runnable.
 
+`ci/fixtures/broken/` runs the other way, for the source predicates, which
+corpus A never loads. Each page carries a defect and names the practice in its
+`EXPECT:` line. Run `${CLAUDE_PLUGIN_ROOT}/bin/snag-scan <page>` on each, and
+check the location too when the line names one. A CLEAR there is a false clear,
+and a CLEAR is the predicate quote an `n/a` row is built on, so the survey can
+call the practice not applicable on a page that has the defect.
+
 Corpus A alone measures only sensitivity, and a predicate that returns "missing"
 for everything scores perfectly on it. Corpus B is what stops that. Report both
 or neither.
@@ -54,10 +61,12 @@ corpus A   4 runtime detectors, 8 loads
 corpus B   fixtures
            correctly abstained ......... n/n
            false positives ............. n   ← the number that matters
+           known broken, fired ......... n/n
+           false clears ................ n
 ```
 
-Name every false positive with its fixture, because that is the list of places
-this tool would have given someone bad advice.
+Name every false positive and every false clear with its fixture, because that
+is the list of places this tool would have given someone bad advice.
 
 ## When a rule fails calibration
 
