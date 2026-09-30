@@ -29,14 +29,15 @@ For each practice with a runtime detector, load both, run `snagInspect()` from
 gives sensitivity: does the rule fire when the defect is genuinely there.
 
 One measured caveat, recorded in `ci/fixtures/calibration.md`: the demos are
-325px stylised illustrations, not realistic markup. `hit-slop`'s demo has zero
-interactive elements in either state, so it cannot calibrate a DOM-shaped
-predicate at all. `concentric-corner-radii`'s is a genuine labelled pair —
-outer 18, padding 14, inner 16 in the defect and exactly 4 when held, on a 44px
-inner box — and the predicate separates it. `color-scheme`'s differs only on its
-dark panel, so it separates on the surface check and never on `:root`, which the
-demo shell declares light in both states. Check which you have before trusting a
-score.
+325px stylised illustrations, not realistic markup. `hit-slop`'s pairs a real
+20px button with a painted 2x drawing of it: the defect is the bare box, and held
+carries `::after` slop to 44px, which the predicate sees only because it counts a
+pseudo-element on the control itself. `concentric-corner-radii`'s is a genuine
+labelled pair — outer 18, padding 14, inner 16 in the defect and exactly 4 when
+held, on a 44px inner box — and the predicate separates it. `color-scheme`'s
+differs only on its dark panel, so it separates on the surface check and never on
+`:root`, which the demo shell declares light in both states. Check which you have
+before trusting a score.
 
 **Corpus B — `ci/fixtures/` in the catalogue repository.** Small hand-written
 pages where a naive predicate fires and the fix would be wrong: tabular figures

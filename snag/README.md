@@ -68,11 +68,11 @@ Run calibrate first. It is the one command that shows the tool being wrong
 before it shows you being wrong.
 
 To try it for one session without installing anything, download
-[snag-2.1.2.zip](https://design.inadram.studio/snag/) and point Claude Code at
+[snag-2.1.3.zip](https://design.inadram.studio/snag/) and point Claude Code at
 the archive:
 
 ```
-claude --plugin-dir ./snag-2.1.2.zip
+claude --plugin-dir ./snag-2.1.3.zip
 ```
 
 The skills are there for that session and nothing is written to your settings.
@@ -92,9 +92,9 @@ ls -d ~/.claude/plugins/cache/*/snag/*        # the plugin root, including its v
 ```
 
 ```
-Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.2/bin/snag-scan:*)
-Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.2/bin/snag-rules:*)
-Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.2/bin/snag-ledger:*)
+Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.3/bin/snag-scan:*)
+Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.3/bin/snag-rules:*)
+Bash(/Users/you/.claude/plugins/cache/inadram/snag/2.1.3/bin/snag-ledger:*)
 ```
 
 Three things about that, all measured against 2.1.267, none of them obvious:

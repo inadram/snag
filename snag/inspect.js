@@ -78,9 +78,30 @@ function snagInspect(target) {
        .slice(0, 20)],
     'computed color-scheme on the document element, and native fields painted light on a dark surface whose scheme has no dark');
 
+  // The rule counts a pseudo-element on the control itself as hit area, so a
+  // ::before or ::after positioned against the control and taking presses
+  // widens the box it is measured by. One on an ancestor never does: that is
+  // the phantom target, not slop.
+  const hitBox = e => {
+    const b = e.getBoundingClientRect();
+    let w = b.width, h = b.height;
+    if (cs(e).position !== 'static' && e.offsetWidth) {
+      const k = b.width / e.offsetWidth;
+      for (const p of ['::before', '::after']) {
+        const s = getComputedStyle(e, p);
+        if (['none', 'normal'].includes(s.content) || s.display === 'none' ||
+            s.pointerEvents === 'none' || s.position !== 'absolute') continue;
+        const sum = (...v) => v.reduce((a, x) => a + (parseFloat(s[x]) || 0), 0);
+        const inner = s.boxSizing === 'border-box';
+        w = Math.max(w, k * (inner ? sum('width') : sum('width', 'paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth')));
+        h = Math.max(h, k * (inner ? sum('height') : sum('height', 'paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth')));
+      }
+    }
+    return [Math.round(w), Math.round(h)];
+  };
   record('hit-slop',
     all.filter(e => e.matches('a[href],button,input,select,[role="button"],[tabindex]:not([tabindex="-1"])'))
-       .map(e => ({ at: at(e), box: (b => [Math.round(b.width), Math.round(b.height)])(e.getBoundingClientRect()),
+       .map(e => ({ at: at(e), box: hitBox(e),
                     // SC 2.5.8 exempts a target already enclosed by a big enough one.
                     covered: (n => { for (n = e.parentElement; n; n = n.parentElement) {
                       const b = n.getBoundingClientRect();
@@ -88,7 +109,7 @@ function snagInspect(target) {
                           (cs(n).cursor === 'pointer' || n.matches('a[href],button,[role="button"],li,tr')))
                         return true; } return false; })() }))
        .filter(x => x.box[0] && x.box[1] && (x.box[0] < 24 || x.box[1] < 24) && !x.covered).slice(0, 40),
-    'interactive elements under 24x24 whose enclosing target is not already large enough');
+    'interactive elements under 24x24, counting a ::before or ::after on the control itself, whose enclosing target is not already large enough');
 
   record('concentric-corner-radii',
     all.flatMap(e => {

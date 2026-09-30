@@ -21,7 +21,7 @@ from [design.inadram.studio/snag](https://design.inadram.studio/snag/) and
 point Claude Code at it:
 
 ```
-claude --plugin-dir ./snag-2.1.2.zip
+claude --plugin-dir ./snag-2.1.3.zip
 ```
 
 ## What is in here
